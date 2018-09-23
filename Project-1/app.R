@@ -55,8 +55,8 @@ ui <- dashboardPage(header, sidebar, body)
 server <- function(input, output) {
   mmInput <- reactive({
     monuments <- monuments.load
-    if (length(input$stateSelect) > 0 ) {
-      monuments <- subset(monuments, state %in% input$stateSelect)
+    if (length(input$stateInput) > 0 ) {
+      monuments <- subset(monuments, state %in% input$stateInput)
     }
     return(monuments)
   })
@@ -65,7 +65,7 @@ server <- function(input, output) {
   output$plot_state <- renderPlotly({
     dat <- mmInput()
     ggplotly(
-      ggplot(data = dat, aes(x = state, y = number)) + 
+      ggplot(data = dat, aes(x = state, fill = type)) + 
         geom_bar()
       )
   })
