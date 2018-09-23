@@ -11,7 +11,7 @@ library(shinythemes)
 
 #load data downloaded from Southern Poverty Law Center
 #https://docs.google.com/spreadsheets/d/17ps4aqRyaIfpu7KdGsy2HRZaaQiXUfLrpUbaR9yS51E/edit?usp=sharing
-monuments.load <- read.csv("monuments1.csv")
+monuments.load <- read.csv("monuments.csv")
 
 header <- dashboardHeader(title = "153 Years Later"
 )
@@ -30,15 +30,16 @@ sidebar <- dashboardSidebar(
                  label = h3("Select state(s)"),
                  choices = sort(unique(monuments.load$state)),
                  multiple = TRUE),
-    selectInput("statusInput",
+      selectInput("statusInput",
                 label = h3("Select status(s)"),
                 choices = sort(unique(monuments.load$status)),
                 multiple = TRUE),
-    dateRangeInput("yearInput", 
+      dateRangeInput("yearInput", 
                 label = h3("Years"),
-                start = "1864-01-01", 
+                start = "1865-05-13", 
                 end = as.character(Sys.Date()),
-                format = "yyyy")
+                format = "yyyy"),
+    sliderInput("Year", "Year released", 1850, 2018, c(1850, 2018))
   )
 )
 
@@ -75,9 +76,11 @@ ui <- dashboardPage(header, sidebar, body)
 # Define server logic
 server <- function(input, output) {
   mmInput <- reactive({
-    monuments <- monuments.load #%>%
-      #filter[year.dedicated >= input$yearInput[1] & year.dedicated <= input$yearInput[2]]
-      
+    monuments <- monuments.load 
+    #monuments <- monuments[(monuments.load$year.dedicated >= input$yearInput[1]) & (monuments.load$year.dedicated <= input$yearInputr[2]), ]
+                                
+    #[year.dedicated >= input$yearInput[1] & year.dedicated <= input$yearInput[2], ]
+    #my_data <- my_data[(my_data$Year>=input$Year[1]) & (my_data$Year<=input$Year[2]), ]
     if (length(input$stateInput) > 0 ) {
       monuments <- subset(monuments, state %in% input$stateInput)
     }
@@ -112,7 +115,7 @@ server <- function(input, output) {
   })
   # Data table of monuments
   output$table <- DT::renderDataTable({
-    subset(mmInput(), select = c(state, side, type, year.dedicated))
+    subset(mmInput(), select = c(state, side, type, year.dedicated, year.removed, status))
   })
   # Count value box
   output$count <- renderValueBox({
