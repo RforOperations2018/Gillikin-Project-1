@@ -7,6 +7,7 @@ library(reshape2)
 library(dplyr)
 library(plotly)
 library(shinythemes)
+library(maps)
 
 
 #load data downloaded from Southern Poverty Law Center
@@ -23,7 +24,7 @@ sidebar <- dashboardSidebar(
     menuItem("Table", icon = icon("table"), tabName = "table"),
       radioButtons("statusInput", 
                  label = h3("Status"),
-                 choices = list("Added" = 1, "Removed" = 2), 
+                 choices = list("Active" = 1, "Removed" = 2), 
                  selected = 1),
                  fluidRow(column(3, verbatimTextOutput("value"))),
       selectInput("stateInput",
@@ -50,7 +51,8 @@ body <- dashboardBody(tabItems(
                    width = 12,
                    tabPanel("Year Erected", plotlyOutput("plot_state")),
                    tabPanel("Side", plotlyOutput("plot_side")),
-                   tabPanel("Monument Type", plotlyOutput("plot_type")))
+                   tabPanel("Monument Type", plotlyOutput("plot_type")),
+                   tabPanel("Map", plotlyOutput("plot_map")))
           )
   ),
   tabItem("table",
@@ -101,6 +103,14 @@ server <- function(input, output) {
         geom_bar(position = "stack")
     )
   })
+  output$plot_map <- renderPlotly({
+    dat <- mmInput()
+    map <- map_data("state")
+    ggplotly(
+      ggplot(data = dat, aes(fill = state)) + 
+        geom_map(aes(map_id = state), map = map) +
+        expand_limits(x = map$latitude, y = map$longitude))
+  })  
   # Data table of monuments
   output$table <- DT::renderDataTable({
     subset(mmInput(), select = c(state, side, type, year.dedicated, number))
