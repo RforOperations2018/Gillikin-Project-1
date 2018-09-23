@@ -11,7 +11,7 @@ library(shinythemes)
 
 #load data downloaded from Southern Poverty Law Center
 #https://docs.google.com/spreadsheets/d/17ps4aqRyaIfpu7KdGsy2HRZaaQiXUfLrpUbaR9yS51E/edit?usp=sharing
-monuments.load <- read.csv("monuments.csv")
+monuments.load <- read.csv("monuments1.csv")
 
 header <- dashboardHeader(title = "153 Years Later: Civil War Monuments in the U.S."
 )
@@ -81,7 +81,7 @@ server <- function(input, output) {
   output$plot_state <- renderPlotly({
     dat <- mmInput()
     ggplotly(
-      ggplot(data = dat, aes(x = year.added, fill = state)) + 
+      ggplot(data = dat, aes(x = year.dedicated, fill = state)) + 
         geom_bar()
     ) 
   })
@@ -89,7 +89,7 @@ server <- function(input, output) {
   output$plot_side <- renderPlotly({
     dat <- mmInput()
     ggplotly(
-      ggplot(data = dat, aes(x = year.added, fill = side)) + 
+      ggplot(data = dat, aes(x = year.dedicated, fill = side)) + 
         geom_bar()
     )
   })
@@ -103,7 +103,7 @@ server <- function(input, output) {
   })
   # Data table of monuments
   output$table <- DT::renderDataTable({
-    subset(mmInput(), select = c(state, side, type, year.added, number))
+    subset(mmInput(), select = c(state, side, type, year.dedicated, number))
   })
   # Sum of total
   output$state <- renderValueBox({
