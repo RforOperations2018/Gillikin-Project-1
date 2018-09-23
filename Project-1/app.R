@@ -25,6 +25,10 @@ sidebar <- dashboardSidebar(
                 label = h3("Select state(s)"),
                 choices = sort(unique(monuments.load$state)),
                 multiple = TRUE),
+    selectInput("typeInput",
+                label = h3("Select monument type(s)"),
+                choices = sort(unique(monuments.load$type)),
+                multiple = TRUE),
     checkboxGroupInput("sideInput", 
                 label = h3("Select side(s)"), 
                 choices = list("North" = 1, "South" = 2, "Border State" = 3, "Not a State" = 4),
@@ -62,8 +66,8 @@ server <- function(input, output) {
       monuments <- subset(monuments, state %in% input$stateInput)
     }
     return(monuments)
-    if (length(input$sideInput) > 0 ) {
-      monuments <- subset(monuments, side %in% input$sideInput)
+    if (length(input$typeInput) > 0 ) {
+      monuments <- subset(monuments, type %in% input$typeInput)
     }
     return(monuments)
   })
@@ -75,7 +79,7 @@ server <- function(input, output) {
         geom_bar()
     ) 
   })
-  # Monuments by year and total by state
+  # Monuments by side
   output$plot_side <- renderPlotly({
     dat <- mmInput()
     ggplotly(
