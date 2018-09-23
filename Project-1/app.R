@@ -30,11 +30,15 @@ sidebar <- dashboardSidebar(
                  label = h3("Select state(s)"),
                  choices = sort(unique(monuments.load$state)),
                  multiple = TRUE),
-      dateRangeInput("yearInput", 
-                 label = h3("Years"),
-                 start = "1864-01-01", 
-                 end = as.character(Sys.Date()),
-                 format = "yyyy")
+    selectInput("statusInput",
+                label = h3("Select status(s)"),
+                choices = sort(unique(monuments.load$status)),
+                multiple = TRUE),
+    dateRangeInput("yearInput", 
+                label = h3("Years"),
+                start = "1864-01-01", 
+                end = as.character(Sys.Date()),
+                format = "yyyy")
   )
 )
 
@@ -71,12 +75,15 @@ ui <- dashboardPage(header, sidebar, body)
 # Define server logic
 server <- function(input, output) {
   mmInput <- reactive({
-    monuments <- monuments.load
-      mmInput[year.dedicated >= input$yearInput[1] & year.dedicated <= input$yearInput[2], ]
+    monuments <- monuments.load #%>%
+      #filter[year.dedicated >= input$yearInput[1] & year.dedicated <= input$yearInput[2]]
       
     if (length(input$stateInput) > 0 ) {
       monuments <- subset(monuments, state %in% input$stateInput)
     }
+    #if (length(input$statusInput) > 0 ) {
+    #  monuments <- subset(monuments, status %in% input$statusInput)
+    #}
     return(monuments)
   })
   # Monuments by year and total by state
