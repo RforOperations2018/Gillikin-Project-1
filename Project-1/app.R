@@ -35,8 +35,8 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(tabItems(
   tabItem("plot",
           fluidRow(
-            infoBoxOutput("state")#,
-            #valueBoxOutput("year")
+            #infoBoxOutput("state")#,
+            valueBoxOutput("state")
           ),
           fluidRow(
             tabBox(title = "Plot",
@@ -73,7 +73,7 @@ server <- function(input, output) {
     ggplotly(
       ggplot(data = dat, aes(x = year, fill = state)) + 
         geom_bar()
-      )
+    ) 
   })
   # Monuments by year and total by state
   output$plot_side <- renderPlotly({
@@ -87,13 +87,13 @@ server <- function(input, output) {
   output$table <- DT::renderDataTable({
     subset(mmInput(), select = c(state, side, type, year, number))
   })
+  # Sum of total
+  output$state <- renderValueBox({
+    mm <- mmInput()
+    num <- mean(mm$state, na.rm = FALSE)
+    valueBox("Total number", value = num, subtitle = paste(nrow(mm, "state")))
+  })
 }
-# State mean info box
-#output$number <- renderInfoBox({
-#  mm <- mmInput()
-#  num <- round(mean(mm$number, na.rm = T), 2)
-#  infoBox("Avg number", value = num, subtitle = paste(nrow(mm, "state")), color = "grey")
-#})
 
 # Run the application 
 shinyApp(ui = ui, server = server)
