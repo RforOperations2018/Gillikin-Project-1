@@ -13,7 +13,7 @@ library(shinythemes)
 #https://docs.google.com/spreadsheets/d/17ps4aqRyaIfpu7KdGsy2HRZaaQiXUfLrpUbaR9yS51E/edit?usp=sharing
 monuments.load <- read.csv("monuments1.csv")
 
-header <- dashboardHeader(title = "153 Years Later: Civil War Monuments in the U.S."
+header <- dashboardHeader(title = "153 Years Late: Confederate Monuments in the U.S."
 )
 
 sidebar <- dashboardSidebar(
@@ -42,16 +42,22 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(tabItems(
   tabItem("plot",
           fluidRow(
+            # Count valuebox
             valueBoxOutput("count"),
+            # States valuebox
+            valueBoxOutput("states"),
+            # Percent valuebox
             valueBoxOutput("percent")
           ),
           fluidRow(
             tabBox(title = "Plot",
                    width = 12,
+                   # Year monument erected plot
                    tabPanel("Year Erected", plotlyOutput("plot_state")),
-                   tabPanel("Side", plotlyOutput("plot_side")),
-                   tabPanel("Type", plotlyOutput("plot_type")),
-                   tabPanel("Count", plotlyOutput("plot_count")))
+                   # Side state was on in the Civil War plot
+                   tabPanel("Side in Civil War", plotlyOutput("plot_side")),
+                   # Type of monument plot
+                   tabPanel("Type of Monument", plotlyOutput("plot_type")))
           )
   ),
   tabItem("table",
@@ -69,10 +75,13 @@ server <- function(input, output) {
     monuments <- monuments.load
     # Slider Year Filter
     #filter(2018 - year >= input$yearInput[1] & 2018 - year <= input$yearInput[2])
-    # State Filter
-    if (input$statusInput == "Added" ) {
-      monuments <- subset(monuments, status %in% input$statusInput)
+    # Status Filter
+    if (input$statusInput == "Active" ) {
+      monuments <- subset(monuments, year.dedicated %in% input$statusInput)
+    } else {
+      monuments <- subset(monuments, year.removed %in% input$statusInput)
     }
+    # State Filter
     if (length(input$stateInput) > 0 ) {
       monuments <- subset(monuments, state %in% input$stateInput)
     }
@@ -102,14 +111,6 @@ server <- function(input, output) {
         geom_bar(position = "stack")
     )
   })
-  # Monuments by count
-  output$plot_count <- renderPlotly({
-    dat <- mmInput()
-    ggplotly(
-      ggplot(data = dat, aes(x = year.dedicated, fill = status)) + 
-        geom_freqpoly()
-    )
-  })
   # Data table of monuments
   output$table <- DT::renderDataTable({
     subset(mmInput(), select = c(state, side, type, year.dedicated, number))
@@ -118,13 +119,19 @@ server <- function(input, output) {
   output$count <- renderValueBox({
     mm <- mmInput()
     num <- round(mean(mm$state, na.rm = T), 2)
-    valueBox("Monuments", value = paste(nrow(mm)), color = "blue")
+    valueBox("Confederate Monuments", value = paste0(nrow(mm)), color = "blue")
+  })
+  # Number of states value box
+  output$states <- renderValueBox({
+    mm <- mmInput()
+    num <- count(mm, state)
+    valueBox("Number of States", value = paste0(num), color = "olive")
   })
   # Percent value box
   output$percent <- renderValueBox({
     mm <- mmInput()
     num <- round(nrow(mm)/nrow(monuments.load), 4) * 100 
-    valueBox("of total", value = paste(num,"%"), color = "grey")
+    valueBox("of total", value = paste0(num,"%"), color = "teal")
   })
 }
 
