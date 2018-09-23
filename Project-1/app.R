@@ -97,8 +97,8 @@ server <- function(input, output) {
   output$plot_type <- renderPlotly({
     dat <- mmInput()
     ggplotly(
-      ggplot(data = dat, aes(x = year.added, fill = type)) + 
-        geom_bar()
+      ggplot(data = dat, aes(x = state, fill = type)) + 
+        geom_bar(position = "stack")
     )
   })
   # Data table of monuments
