@@ -42,10 +42,8 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(tabItems(
   tabItem("plot",
           fluidRow(
-            #infoBoxOutput("state")#,
-            valueBoxOutput("state"),
-            # Dynamic infoBoxes
-            infoBoxOutput("Total")
+            infoBoxOutput("total"),
+            valueBoxOutput("count")
           ),
           fluidRow(
             tabBox(title = "Plot",
@@ -116,14 +114,16 @@ server <- function(input, output) {
   output$table <- DT::renderDataTable({
     subset(mmInput(), select = c(state, side, type, year.dedicated, number))
   })
-  # Sum of total
-  output$state <- renderValueBox({
-    num <- nrow(monuments.load)
-    valueBox("Total number", value = num, color = "blue")
+  # Total monuments info box
+  output$total <- renderInfoBox({
+    mm <- mmInput()
+    infoBox("Total", value = paste(nrow(mm), "Monuments"), color = "purple")
   })
-  output$progressBox <- renderInfoBox({
-    infoBox(
-      "Total", value = dedicated, color = "purple")
+  # Height mean value box
+  output$count <- renderValueBox({
+    mm <- mmInput()
+    num <- round(mean(mm$state, na.rm = T), 2)
+    valueBox("Monuments", value = paste(nrow(mm)), color = "blue")
   })
 }
 
