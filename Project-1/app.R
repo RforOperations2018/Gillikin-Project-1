@@ -26,14 +26,7 @@ sidebar <- dashboardSidebar(
                 choices = sort(unique(monuments.load$state)),
                 multiple = TRUE,
                 selectize = TRUE,
-                selected = c("AL", "NC"))#,
-    # Year Selection
-   # sliderInput("yearSelect",
-    #            "Year Erected:",
-     #           min = min(monuments.load$year, na.rm = T),
-      #          max = max(monuments.load$year, na.rm = T),
-       #         value = c(min(monuments.load$year, na.rm = T), max(monuments.load$year, na.rm = T)),
-        #        step = 1)
+                selected = c("AL", "NC"))
   )
 )
 
@@ -46,9 +39,7 @@ body <- dashboardBody(tabItems(
           fluidRow(
             tabBox(title = "Plot",
                    width = 12,
-                   tabPanel("Side", plotlyOutput("plot_side")),
-                   tabPanel("Year", plotlyOutput("plot_year")),
-                   tabPanel("Type", plotlyOutput("plot_type")))
+                   tabPanel("Side", plotlyOutput("plot_state")))
           )
   ),
   tabItem("table",
@@ -64,9 +55,6 @@ ui <- dashboardPage(header, sidebar, body)
 server <- function(input, output) {
   mmInput <- reactive({
     monuments <- monuments.load %>%
-      # Slider Filter
-#      filter(year >= input$yearSelect[1] & year <= input$yearSelect[2])
-    # Homeworld Filter
     if (length(input$stateSelect) > 0 ) {
       monuments <- subset(monuments, state %in% input$stateSelect)
     }
@@ -74,54 +62,16 @@ server <- function(input, output) {
   })
   
   # Plot 1
-  output$plot1 <- renderPlotly({
+  output$plot_state <- renderPlotly({
     dat <- mmInput()
     ggplotly(
       ggplot(data = dat, aes(x = state, y = number, color = "blue")) + 
-        geom_point() +
-        guides(color = FALSE)
-      , tooltip = "text")
+        geom_bar()
+      )
   })
-  
-  # A plot showing the side of the state
-  output$plot_side <- renderPlotly({
-    dat <- mmInput()
-    ggplot(data = dat, aes(x = state, y = as.numeric(number), fill = state)) + geom_bar(stat = "identity")
-  })
-  # A plot showing the year of the monument
-  output$plot_year <- renderPlotly({
-    dat <- mmInput()
-    ggplot(data = dat, aes(x = year, y = as.numeric(value), fill = year)) + geom_bar(stat = "identity")
-  })
-  # A plot showing type of monument
-  output$plot_type <- renderPlotly({
-    dat <- mmInput()
-    ggplot(data = dat, aes(x = year, y = as.numeric(value), fill = year)) + geom_bar(stat = "identity")
-  })
-  # Data table of monumnets
+  # Data table of monuments
   output$table <- DT::renderDataTable({
-    subset(mmInput(), select = c(state, type, year, status))
-  })
-  # Per state mean info box
-  output$side <- renderInfoBox({
-    mm <- mmInput()
-    num <- round(mean(mm$state, na.rm = T), 2)
-    
-    infoBox("Avg Per State", value = num, subtitle = paste(nrow(mm), "state"), icon = icon("balance-scale"), color = "purple")
-  })
-  # Per state mean info box
-  output$side <- renderInfoBox({
-    mm <- mmInput()
-    num <- round(mean(mm$state, na.rm = T), 2)
-    
-    infoBox("Avg Mass", value = num, subtitle = paste(nrow(mm), "year"), color = "blue")
-  })
-  # Height mean value box
-  output$side <- renderValueBox({
-    mm <- mmInput()
-    num <- round(mean(mm$state, na.rm = T), 2)
-    
-    valueBox(subtitle = "Avg Monuments", value = num, color = "grey")
+    subset(mmInput(), select = c(state, year, number))
   })
 }
 
