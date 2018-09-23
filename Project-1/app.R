@@ -25,15 +25,12 @@ sidebar <- dashboardSidebar(
                  label = h3("Status"),
                  choices = list("Added" = 1, "Removed" = 2), 
                  selected = 1),
+                 fluidRow(column(3, verbatimTextOutput("value"))),
       selectInput("stateInput",
                  label = h3("Select state(s)"),
                  choices = sort(unique(monuments.load$state)),
                  multiple = TRUE),
-     selectInput("typeInput",
-                 label = h3("Select monument type(s)"),
-                 choices = sort(unique(monuments.load$type)),
-                 multiple = TRUE),
-    sliderInput("yearInput",
+      sliderInput("yearInput",
                 label = h3("Years since Civil War"),
                 min = 0,
                 max = 153,
@@ -52,7 +49,8 @@ body <- dashboardBody(tabItems(
             tabBox(title = "Plot",
                    width = 12,
                    tabPanel("Year Erected", plotlyOutput("plot_state")),
-                   tabPanel("Side", plotlyOutput("plot_side")))
+                   tabPanel("Side", plotlyOutput("plot_side")),
+                   tabPanel("Monument Type", plotlyOutput("plot_type")))
           )
   ),
   tabItem("table",
@@ -68,12 +66,14 @@ ui <- dashboardPage(header, sidebar, body)
 server <- function(input, output) {
   mmInput <- reactive({
     monuments <- monuments.load
+    # Slider Year Filter
+    #filter(2018 - year >= input$yearInput[1] & 2018 - year <= input$yearInput[2])
+    # State Filter
+    if (input$statusInput == "Added" ) {
+      monuments <- subset(monuments, status %in% input$statusInput)
+    }
     if (length(input$stateInput) > 0 ) {
       monuments <- subset(monuments, state %in% input$stateInput)
-    }
-    return(monuments)
-    if (length(input$typeInput) > 0 ) {
-      monuments <- subset(monuments, type %in% input$typeInput)
     }
     return(monuments)
   })
@@ -81,7 +81,7 @@ server <- function(input, output) {
   output$plot_state <- renderPlotly({
     dat <- mmInput()
     ggplotly(
-      ggplot(data = dat, aes(x = year, fill = state)) + 
+      ggplot(data = dat, aes(x = year.added, fill = state)) + 
         geom_bar()
     ) 
   })
@@ -89,13 +89,21 @@ server <- function(input, output) {
   output$plot_side <- renderPlotly({
     dat <- mmInput()
     ggplotly(
-      ggplot(data = dat, aes(x = year, fill = side)) + 
+      ggplot(data = dat, aes(x = year.added, fill = side)) + 
+        geom_bar()
+    )
+  })
+  # Monuments by type
+  output$plot_type <- renderPlotly({
+    dat <- mmInput()
+    ggplotly(
+      ggplot(data = dat, aes(x = year.added, fill = type)) + 
         geom_bar()
     )
   })
   # Data table of monuments
   output$table <- DT::renderDataTable({
-    subset(mmInput(), select = c(state, side, type, year, number))
+    subset(mmInput(), select = c(state, side, type, year.added, number))
   })
   # Sum of total
   output$state <- renderValueBox({
