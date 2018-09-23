@@ -24,7 +24,12 @@ sidebar <- dashboardSidebar(
     selectInput("stateInput",
                 "Select state:",
                 choices = sort(unique(monuments.load$state)),
-                multiple = TRUE)
+                multiple = TRUE),
+    checkboxGroupInput("sideInput", label = "Select side", 
+                       choices = list("North" = 1, "South" = 2, "Border State" = 3, "Not a State" = 4),
+                       selected = FALSE),
+    hr(),
+    fluidRow(column(4, verbatimTextOutput("value")))
   )
 )
 
@@ -72,11 +77,11 @@ server <- function(input, output) {
   })
 }
 # State mean info box
-output$number <- renderInfoBox({
-  mm <- mmInput()
-  num <- round(mean(mm$number, na.rm = T), 2)
-  infoBox("Avg number", value = num, subtitle = paste(nrow(mm, "state")), color = "grey")
-})
+#output$number <- renderInfoBox({
+#  mm <- mmInput()
+#  num <- round(mean(mm$number, na.rm = T), 2)
+#  infoBox("Avg number", value = num, subtitle = paste(nrow(mm, "state")), color = "grey")
+#})
 
 # Run the application 
 shinyApp(ui = ui, server = server)
