@@ -22,24 +22,22 @@ sidebar <- dashboardSidebar(
     menuItem("Plot", icon = icon("bar-chart"), tabName = "plot"),
     menuItem("Table", icon = icon("table"), tabName = "table"),
     selectInput("stateInput",
-                "State:",
+                "Select state:",
                 choices = sort(unique(monuments.load$state)),
-                multiple = TRUE,
-                selectize = TRUE,
-                selected = c("AL", "NC"))
+                multiple = TRUE)
   )
 )
 
 body <- dashboardBody(tabItems(
   tabItem("plot",
           fluidRow(
-            infoBoxOutput("state"),
-            valueBoxOutput("year")
+            infoBoxOutput("state")#,
+            #valueBoxOutput("year")
           ),
           fluidRow(
             tabBox(title = "Plot",
                    width = 12,
-                   tabPanel("Side", plotlyOutput("plot_state")))
+                   tabPanel("Year Erected", plotlyOutput("plot_state")))
           )
   ),
   tabItem("table",
@@ -60,20 +58,25 @@ server <- function(input, output) {
     }
     return(monuments)
   })
-  
   # Plot 1
   output$plot_state <- renderPlotly({
     dat <- mmInput()
     ggplotly(
-      ggplot(data = dat, aes(x = state, fill = type)) + 
+      ggplot(data = dat, aes(x = year, fill = state)) + 
         geom_bar()
       )
   })
   # Data table of monuments
   output$table <- DT::renderDataTable({
-    subset(mmInput(), select = c(state, year, number))
+    subset(mmInput(), select = c(state, side, type, year, number))
   })
 }
+# State mean info box
+output$number <- renderInfoBox({
+  mm <- mmInput()
+  num <- round(mean(mm$number, na.rm = T), 2)
+  infoBox("Avg number", value = num, subtitle = paste(nrow(mm, "state")), color = "grey")
+})
 
 # Run the application 
 shinyApp(ui = ui, server = server)
