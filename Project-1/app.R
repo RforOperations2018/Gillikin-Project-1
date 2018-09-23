@@ -22,14 +22,13 @@ sidebar <- dashboardSidebar(
     menuItem("Plot", icon = icon("bar-chart"), tabName = "plot"),
     menuItem("Table", icon = icon("table"), tabName = "table"),
     selectInput("stateInput",
-                "Select state:",
+                label = h3("Select state(s)"),
                 choices = sort(unique(monuments.load$state)),
                 multiple = TRUE),
-    checkboxGroupInput("sideInput", label = "Select side", 
-                       choices = list("North" = 1, "South" = 2, "Border State" = 3, "Not a State" = 4),
-                       selected = FALSE),
-    hr(),
-    fluidRow(column(4, verbatimTextOutput("value")))
+    checkboxGroupInput("sideInput", 
+                label = h3("Select side(s)"), 
+                choices = list("North" = 1, "South" = 2, "Border State" = 3, "Not a State" = 4),
+                selected = FALSE)
   )
 )
 
@@ -42,7 +41,8 @@ body <- dashboardBody(tabItems(
           fluidRow(
             tabBox(title = "Plot",
                    width = 12,
-                   tabPanel("Year Erected", plotlyOutput("plot_state")))
+                   tabPanel("Year Erected", plotlyOutput("plot_state")),
+                   tabPanel("Side", plotlyOutput("plot_side")))
           )
   ),
   tabItem("table",
@@ -62,14 +62,26 @@ server <- function(input, output) {
       monuments <- subset(monuments, state %in% input$stateInput)
     }
     return(monuments)
+    if (length(input$sideInput) > 0 ) {
+      monuments <- subset(monuments, side %in% input$sideInput)
+    }
+    return(monuments)
   })
-  # Plot 1
+  # Monuments by year and total by state
   output$plot_state <- renderPlotly({
     dat <- mmInput()
     ggplotly(
       ggplot(data = dat, aes(x = year, fill = state)) + 
         geom_bar()
       )
+  })
+  # Monuments by year and total by state
+  output$plot_side <- renderPlotly({
+    dat <- mmInput()
+    ggplotly(
+      ggplot(data = dat, aes(x = year, fill = side)) + 
+        geom_bar()
+    )
   })
   # Data table of monuments
   output$table <- DT::renderDataTable({
