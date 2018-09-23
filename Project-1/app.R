@@ -8,13 +8,11 @@ library(dplyr)
 library(plotly)
 library(shinythemes)
 
-starwars.load <- starwars %>%
-  mutate(films = as.character(films),
-         vehicles = as.character(vehicles),
-         starships = as.character(starships),
-         name = as.factor(name))
 
-pdf(NULL)
+#load data downloaded from Southern Poverty Law Center
+#https://docs.google.com/spreadsheets/d/17ps4aqRyaIfpu7KdGsy2HRZaaQiXUfLrpUbaR9yS51E/edit?usp=sharing
+monuments.load <- read.csv("monuments.csv")
+
 
 header <- dashboardHeader(title = "153 Years Later: Civil War Monuments in the U.S."
 )
@@ -24,18 +22,18 @@ sidebar <- dashboardSidebar(
     id = "tabs",
     menuItem("Plot", icon = icon("bar-chart"), tabName = "plot"),
     menuItem("Table", icon = icon("table"), tabName = "table"),
-    selectInput("worldSelect",
-                "Homeworld:",
-                choices = sort(unique(starwars.load$homeworld)),
+    selectInput("stateInput",
+                "State:",
+                choices = sort(unique(monuments.load$state)),
                 multiple = TRUE,
                 selectize = TRUE,
-                selected = c("Naboo", "Tatooine")),
+                selected = c("AL", "NC")),
     # Birth Selection
-    sliderInput("birthSelect",
-                "Birth Year:",
-                min = min(starwars.load$birth_year, na.rm = T),
-                max = max(starwars.load$birth_year, na.rm = T),
-                value = c(min(starwars.load$birth_year, na.rm = T), max(starwars.load$birth_year, na.rm = T)),
+    sliderInput("yearSelect",
+                "Year Erected:",
+                min = min(monuments.load$year, na.rm = T),
+                max = max(monuments.load$year, na.rm = T),
+                value = c(min(monuments.load$year, na.rm = T), max(monuments.load$year, na.rm = T)),
                 step = 1)
   )
 )
@@ -49,9 +47,9 @@ body <- dashboardBody(tabItems(
           fluidRow(
             tabBox(title = "Plot",
                    width = 12,
-                   tabPanel("Side", plotlyOutput("plot_mass")),
-                   tabPanel("Year", plotlyOutput("plot_height")),
-                   tabPanel("Type", plotlyOutput("plot_height")))
+                   tabPanel("Side", plotlyOutput("plot_side")),
+                   tabPanel("Year", plotlyOutput("plot_year")),
+                   tabPanel("Type", plotlyOutput("plot_type")))
           )
   ),
   tabItem("table",
@@ -65,49 +63,61 @@ ui <- dashboardPage(header, sidebar, body)
 
 # Define server logic
 server <- function(input, output) {
-  swInput <- reactive({
-    starwars <- starwars.load %>%
+  mmInput <- reactive({
+    monuments <- monuments.load %>%
       # Slider Filter
       filter(birth_year >= input$birthSelect[1] & birth_year <= input$birthSelect[2])
     # Homeworld Filter
     if (length(input$worldSelect) > 0 ) {
-      starwars <- subset(starwars, homeworld %in% input$worldSelect)
+      monuments <- subset(monuments, homeworld %in% input$worldSelect)
     }
     
-    return(starwars)
+    return(monuments)
   })
   # Reactive melted data
-  mwInput <- reactive({
-    swInput() %>%
+  moInput <- reactive({
+    mmInput() %>%
       melt(id = "name")
   })
-  # A plot showing the mass of characters
-  output$plot_mass <- renderPlotly({
-    dat <- subset(mwInput(), variable == "side")
+  # A plot showing the side of the state
+  output$plot_side <- renderPlotly({
+    dat <- subset(moInput(), variable == "side")
     ggplot(data = dat, aes(x = name, y = as.numeric(value), fill = name)) + geom_bar(stat = "identity")
   })
-  # A plot showing the height of characters
-  output$plot_height <- renderPlotly({
-    dat <- subset(mwInput(),  variable == "height")
+  # A plot showing the year of the monument
+  output$plot_year <- renderPlotly({
+    dat <- subset(moInput(),  variable == "year")
+    ggplot(data = dat, aes(x = name, y = as.numeric(value), fill = name)) + geom_bar(stat = "identity")
+  })
+  # A plot showing type of monument
+  output$plot_type <- renderPlotly({
+    dat <- subset(moInput(),  variable == "type")
     ggplot(data = dat, aes(x = name, y = as.numeric(value), fill = name)) + geom_bar(stat = "identity")
   })
   # Data table of characters
   output$table <- DT::renderDataTable({
-    subset(swInput(), select = c(name, height, mass, birth_year, homeworld, species, films))
+    subset(mmInput(), select = c(name, height, mass, birth_year, homeworld, species, films))
   })
   # Mass mean info box
-  output$mass <- renderInfoBox({
-    sw <- swInput()
-    num <- round(mean(sw$mass, na.rm = T), 2)
+  output$side <- renderInfoBox({
+    mm <- mmInput()
+    num <- round(mean(mm$mass, na.rm = T), 2)
     
-    infoBox("Avg Mass", value = num, subtitle = paste(nrow(sw), "characters"), icon = icon("balance-scale"), color = "purple")
+    infoBox("Avg Mass", value = num, subtitle = paste(nrow(mm), "characters"), icon = icon("balance-scale"), color = "purple")
+  })
+  # Mass mean info box
+  output$side <- renderInfoBox({
+    mm <- mmInput()
+    num <- round(mean(mm$mass, na.rm = T), 2)
+    
+    infoBox("Avg Mass", value = num, subtitle = paste(nrow(mm), "characters"), icon = icon("balance-scale"), color = "purple")
   })
   # Height mean value box
-  output$height <- renderValueBox({
-    sw <- swInput()
-    num <- round(mean(sw$height, na.rm = T), 2)
+  output$side <- renderValueBox({
+    mm <- mmInput()
+    num <- round(mean(mm$height, na.rm = T), 2)
     
-    valueBox(subtitle = "Avg Height", value = num, icon = icon("sort-numeric-asc"), color = "blue")
+    valueBox(subtitle = "Avg Monuments", value = num, color = "grey")
   })
 }
 
