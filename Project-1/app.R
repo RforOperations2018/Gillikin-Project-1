@@ -21,8 +21,8 @@ sidebar <- dashboardSidebar(
     id = "tabs",
     menuItem("Plot", icon = icon("bar-chart"), tabName = "plot"),
     menuItem("Table", icon = icon("table"), tabName = "table"),
-      radioButtons("radio", 
-                 label = h3("Type"),
+      radioButtons("statusInput", 
+                 label = h3("Status"),
                  choices = list("Added" = 1, "Removed" = 2), 
                  selected = 1),
       selectInput("stateInput",
@@ -33,10 +33,12 @@ sidebar <- dashboardSidebar(
                  label = h3("Select monument type(s)"),
                  choices = sort(unique(monuments.load$type)),
                  multiple = TRUE),
-     checkboxGroupInput("sideInput", 
-                 label = h3("Select side(s)"), 
-                 choices = list("North" = 1, "South" = 2, "Border State" = 3, "Not a State" = 4),
-                 selected = FALSE)
+    sliderInput("yearInput",
+                label = h3("Years since Civil War"),
+                min = 0,
+                max = 153,
+                value = c(0,153),
+                step = 1)
   )
 )
 
