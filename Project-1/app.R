@@ -21,6 +21,7 @@ sidebar <- dashboardSidebar(
     id = "tabs",
     menuItem("Plot", icon = icon("bar-chart"), tabName = "plot"),
     menuItem("Table", icon = icon("table"), tabName = "table"),
+    # Where is my third page?
       radioButtons("statusInput", 
                  label = h3("Status"),
                  choices = list("Active" = 1, "Removed" = 2), 
@@ -39,7 +40,9 @@ sidebar <- dashboardSidebar(
                 start = "1865-05-13", 
                 end = as.character(Sys.Date()),
                 format = "yyyy"),
-    sliderInput("Year", "Year released", 1850, 2018, c(1850, 2018))
+    sliderInput("Year", "Year released", 1850, 2018, c(1850, 2018)# Remove commas for years! ,
+                # IE: sep = ""
+                )
   )
 )
 
@@ -77,6 +80,7 @@ ui <- dashboardPage(header, sidebar, body)
 server <- function(input, output) {
   mmInput <- reactive({
     monuments <- monuments.load 
+    # I'm confused why these are commented out...
     #monuments <- monuments[(monuments.load$year.dedicated >= input$yearInput[1]) & (monuments.load$year.dedicated <= input$yearInputr[2]), ]
                                 
     #[year.dedicated >= input$yearInput[1] & year.dedicated <= input$yearInput[2], ]
