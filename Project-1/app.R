@@ -7,7 +7,6 @@ library(reshape2)
 library(dplyr)
 library(plotly)
 library(shinythemes)
-library(maps)
 
 
 #load data downloaded from Southern Poverty Law Center
@@ -44,15 +43,17 @@ body <- dashboardBody(tabItems(
   tabItem("plot",
           fluidRow(
             #infoBoxOutput("state")#,
-            valueBoxOutput("state")
+            valueBoxOutput("state"),
+            # Dynamic infoBoxes
+            infoBoxOutput("Total")
           ),
           fluidRow(
             tabBox(title = "Plot",
                    width = 12,
                    tabPanel("Year Erected", plotlyOutput("plot_state")),
                    tabPanel("Side", plotlyOutput("plot_side")),
-                   tabPanel("Monument Type", plotlyOutput("plot_type")),
-                   tabPanel("Map", plotlyOutput("plot_map")))
+                   tabPanel("Type", plotlyOutput("plot_type")),
+                   tabPanel("Count", plotlyOutput("plot_count")))
           )
   ),
   tabItem("table",
@@ -103,23 +104,26 @@ server <- function(input, output) {
         geom_bar(position = "stack")
     )
   })
-  output$plot_map <- renderPlotly({
+  # Monuments by count
+  output$plot_count <- renderPlotly({
     dat <- mmInput()
-    map <- map_data("state")
     ggplotly(
-      ggplot(data = dat, aes(fill = state)) + 
-        geom_map(aes(map_id = state), map = map) +
-        expand_limits(x = map$latitude, y = map$longitude))
-  })  
+      ggplot(data = dat, aes(x = year.dedicated, fill = status)) + 
+        geom_freqpoly()
+    )
+  })
   # Data table of monuments
   output$table <- DT::renderDataTable({
     subset(mmInput(), select = c(state, side, type, year.dedicated, number))
   })
   # Sum of total
   output$state <- renderValueBox({
-    mm <- mmInput()
-    num <- mean(mm$state, na.rm = FALSE)
-    valueBox("Total number", value = num, subtitle = paste(nrow(mm, "state")))
+    num <- nrow(monuments.load)
+    valueBox("Total number", value = num, color = "blue")
+  })
+  output$progressBox <- renderInfoBox({
+    infoBox(
+      "Total", value = dedicated, color = "purple")
   })
 }
 
