@@ -13,7 +13,7 @@ library(shinythemes)
 #https://docs.google.com/spreadsheets/d/17ps4aqRyaIfpu7KdGsy2HRZaaQiXUfLrpUbaR9yS51E/edit?usp=sharing
 monuments.load <- read.csv("monuments1.csv")
 
-header <- dashboardHeader(title = "153 Years Late: Confederate Monuments in the U.S."
+header <- dashboardHeader(title = "153 Years Later"
 )
 
 sidebar <- dashboardSidebar(
@@ -30,12 +30,11 @@ sidebar <- dashboardSidebar(
                  label = h3("Select state(s)"),
                  choices = sort(unique(monuments.load$state)),
                  multiple = TRUE),
-      sliderInput("yearInput",
-                label = h3("Years since Civil War"),
-                min = 0,
-                max = 153,
-                value = c(0,153),
-                step = 1)
+      dateRangeInput("yearInput", 
+                 label = h3("Years"),
+                 start = "1864-01-01", 
+                 end = as.character(Sys.Date()),
+                 format = "yyyy")
   )
 )
 
@@ -73,15 +72,8 @@ ui <- dashboardPage(header, sidebar, body)
 server <- function(input, output) {
   mmInput <- reactive({
     monuments <- monuments.load
-    # Slider Year Filter
-    #filter(2018 - year >= input$yearInput[1] & 2018 - year <= input$yearInput[2])
-    # Status Filter
-    if (input$statusInput == "Active" ) {
-      monuments <- subset(monuments, year.dedicated %in% input$statusInput)
-    } else {
-      monuments <- subset(monuments, year.removed %in% input$statusInput)
-    }
-    # State Filter
+      mmInput[year.dedicated >= input$yearInput[1] & year.dedicated <= input$yearInput[2], ]
+      
     if (length(input$stateInput) > 0 ) {
       monuments <- subset(monuments, state %in% input$stateInput)
     }
@@ -92,7 +84,7 @@ server <- function(input, output) {
     dat <- mmInput()
     ggplotly(
       ggplot(data = dat, aes(x = year.dedicated, fill = state)) + 
-        geom_bar()
+        geom_bar(type=input$statusInput)
     ) 
   })
   # Monuments by side
@@ -113,7 +105,7 @@ server <- function(input, output) {
   })
   # Data table of monuments
   output$table <- DT::renderDataTable({
-    subset(mmInput(), select = c(state, side, type, year.dedicated, number))
+    subset(mmInput(), select = c(state, side, type, year.dedicated))
   })
   # Count value box
   output$count <- renderValueBox({
