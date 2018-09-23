@@ -42,8 +42,8 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(tabItems(
   tabItem("plot",
           fluidRow(
-            infoBoxOutput("total"),
-            valueBoxOutput("count")
+            valueBoxOutput("count"),
+            valueBoxOutput("percent")
           ),
           fluidRow(
             tabBox(title = "Plot",
@@ -114,16 +114,17 @@ server <- function(input, output) {
   output$table <- DT::renderDataTable({
     subset(mmInput(), select = c(state, side, type, year.dedicated, number))
   })
-  # Total monuments info box
-  output$total <- renderInfoBox({
-    mm <- mmInput()
-    infoBox("Total", value = paste(nrow(mm), "Monuments"), color = "purple")
-  })
-  # Height mean value box
+  # Count value box
   output$count <- renderValueBox({
     mm <- mmInput()
     num <- round(mean(mm$state, na.rm = T), 2)
     valueBox("Monuments", value = paste(nrow(mm)), color = "blue")
+  })
+  # Percent value box
+  output$percent <- renderValueBox({
+    mm <- mmInput()
+    num <- round(nrow(mm)/nrow(monuments.load), 4) * 100 
+    valueBox("of total", value = paste(num,"%"), color = "grey")
   })
 }
 
